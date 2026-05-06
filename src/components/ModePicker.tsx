@@ -2,6 +2,7 @@ import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Shield, Users, Lock, Globe} from 'lucide-react-native';
 import {DnsMode, DNS_MODES, DnsModeConfig} from '../constants/dnsModes';
+import {useTranslation} from 'react-i18next';
 
 interface ModePickerProps {
   currentMode: DnsMode;
@@ -32,6 +33,7 @@ const ModeCard: React.FC<{
   isSelected: boolean;
   onPress: () => void;
 }> = ({config, isSelected, onPress}) => {
+  const {t} = useTranslation();
   const {label, subtitle, accentColor, icon} = config;
   return (
     <TouchableOpacity
@@ -61,21 +63,22 @@ const ModeCard: React.FC<{
         )}
       </View>
       <Text style={[styles.cardLabel, isSelected && {color: accentColor}]}>
-        {label}
+        {t(label)}
       </Text>
       <Text style={styles.cardSubtitle} numberOfLines={2}>
-        {subtitle}
+        {t(subtitle)}
       </Text>
     </TouchableOpacity>
   );
 };
 
 const ModePicker: React.FC<ModePickerProps> = ({currentMode, onSelect}) => {
+  const {t} = useTranslation();
   const pairs = [DNS_MODES.slice(0, 2), DNS_MODES.slice(2, 4)];
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.sectionLabel}>MODUS WÄHLEN</Text>
+      <Text style={styles.sectionLabel}>{t('choose_mode')}</Text>
       {pairs.map((row, ri) => (
         <View key={ri} style={styles.row}>
           {row.map(config => (

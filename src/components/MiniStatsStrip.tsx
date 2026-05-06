@@ -7,12 +7,14 @@ import {
   formatDuration,
   formatRate,
 } from '../store/useTrafficStore';
+import {useTranslation} from 'react-i18next';
 
 interface MiniStatsStripProps {
   accentColor: string;
 }
 
 const MiniStatsStrip: React.FC<MiniStatsStripProps> = ({accentColor}) => {
+  const {t} = useTranslation();
   const {stats, rxHistory, txHistory} = useTrafficStore();
 
   const lastRxRate = rxHistory[rxHistory.length - 1] ?? 0;
@@ -53,7 +55,7 @@ const MiniStatsStrip: React.FC<MiniStatsStripProps> = ({accentColor}) => {
           <Text style={styles.statValueMuted}>
             {formatDuration(stats.sessionDurationSec)}
           </Text>
-          <Text style={styles.statRate}>Laufzeit</Text>
+          <Text style={styles.statRate}>{t('uptime')}</Text>
         </View>
       </View>
     </View>

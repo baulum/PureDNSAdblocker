@@ -14,7 +14,7 @@ import Animated, {
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
-import {Home, Server, BarChart2} from 'lucide-react-native';
+import {Home, Server, BarChart2, User} from 'lucide-react-native';
 import {useVpnStore} from '../store/useVpnStore';
 import {useTrafficStore} from '../store/useTrafficStore';
 import {getModeConfig} from '../constants/dnsModes';
@@ -23,11 +23,14 @@ import ModePicker from '../components/ModePicker';
 import MiniStatsStrip from '../components/MiniStatsStrip';
 import ServersScreen from './ServersScreen';
 import StatsScreen from './StatsScreen';
+import ProfileScreen from './ProfileScreen';
+import {useTranslation} from 'react-i18next';
 
-type Tab = 'home' | 'servers' | 'stats';
+type Tab = 'home' | 'servers' | 'stats' | 'profile';
 
 // ─── Home Tab ─────────────────────────────────────────────────────────────────
 const HomeTab: React.FC = () => {
+  const {t} = useTranslation();
   const {isActive, isLoading, currentMode, error, toggleVpn, setMode} =
     useVpnStore();
   const modeConfig = getModeConfig(currentMode);
@@ -67,15 +70,15 @@ const HomeTab: React.FC = () => {
               {color: isActive ? accentColor : '#555'},
             ]}>
             {isLoading
-              ? 'Verbinde...'
+              ? t('connecting')
               : isActive
-              ? 'Adblocker aktiv'
-              : 'Adblocker inaktiv'}
+              ? t('active')
+              : t('inactive')}
           </Text>
           <Text style={styles.modeText}>
-            Modus:{' '}
+            {t('mode')}{' '}
             <Text style={[styles.modeName, {color: accentColor + 'BB'}]}>
-              {modeConfig.label}
+              {t(modeConfig.label)}
             </Text>
           </Text>
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -84,7 +87,7 @@ const HomeTab: React.FC = () => {
         {/* Active DNS pill */}
         {isActive && (
           <View style={styles.dnsPill}>
-            <Text style={styles.dnsPillLabel}>DNS</Text>
+            <Text style={styles.dnsPillLabel}>{t('dns')}</Text>
             <Text style={styles.dnsPillIp}>{modeConfig.dns[0]}</Text>
             <Text style={styles.dnsPillSep}>·</Text>
             <Text style={styles.dnsPillIp}>{modeConfig.dns[1]}</Text>
@@ -103,6 +106,7 @@ const HomeTab: React.FC = () => {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const MainScreen: React.FC = () => {
+  const {t} = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const {isActive} = useVpnStore();
   const {accentColor} = getModeConfig(useVpnStore(s => s.currentMode));
@@ -122,9 +126,10 @@ const MainScreen: React.FC = () => {
   }, [isActive]);
 
   const TABS: {key: Tab; label: string; Icon: any}[] = [
-    {key: 'home', label: 'Start', Icon: Home},
-    {key: 'stats', label: 'Stats', Icon: BarChart2},
-    {key: 'servers', label: 'Server', Icon: Server},
+    {key: 'home', label: t('start'), Icon: Home},
+    {key: 'stats', label: t('stats'), Icon: BarChart2},
+    {key: 'servers', label: t('server'), Icon: Server},
+    {key: 'profile', label: t('profile'), Icon: User},
   ];
 
   return (
@@ -147,6 +152,7 @@ const MainScreen: React.FC = () => {
         {activeTab === 'home' && <HomeTab />}
         {activeTab === 'stats' && <StatsScreen />}
         {activeTab === 'servers' && <ServersScreen />}
+        {activeTab === 'profile' && <ProfileScreen />}
       </View>
 
       {/* Tab bar — respects gesture nav bar */}

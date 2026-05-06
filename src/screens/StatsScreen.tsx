@@ -14,6 +14,7 @@ import {
 } from '../store/useTrafficStore';
 import {useVpnStore} from '../store/useVpnStore';
 import {getModeConfig} from '../constants/dnsModes';
+import {useTranslation} from 'react-i18next';
 
 // ─── Sparkline chart ──────────────────────────────────────────────────────────
 interface SparklineProps {
@@ -78,6 +79,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 const StatsScreen: React.FC = () => {
+  const {t} = useTranslation();
   const {stats, rxHistory, txHistory, isPolling} = useTrafficStore();
   const {isActive, currentMode} = useVpnStore();
   const modeConfig = getModeConfig(currentMode);
@@ -93,20 +95,20 @@ const StatsScreen: React.FC = () => {
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Statistiken</Text>
+      <Text style={styles.title}>{t('statistics')}</Text>
       <Text style={styles.subtitle}>
         {isPolling
-          ? 'Live-Daten · aktualisiert jede Sekunde'
-          : 'Aktiviere den Adblocker um Daten zu sehen'}
+          ? t('live_data')
+          : t('activate_to_see_data')}
       </Text>
 
       {/* Session overview */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>SESSION</Text>
+        <Text style={styles.sectionLabel}>{t('session')}</Text>
         <View style={styles.bigCard}>
           <View style={styles.bigCardRow}>
             <View style={styles.bigStat}>
-              <Text style={styles.bigStatLabel}>↓ Empfangen</Text>
+              <Text style={styles.bigStatLabel}>↓ {t('download')}</Text>
               <Text style={[styles.bigStatValue, {color: accent}]}>
                 {formatBytes(stats.sessionRxBytes)}
               </Text>
@@ -114,7 +116,7 @@ const StatsScreen: React.FC = () => {
             </View>
             <View style={styles.bigStatDivider} />
             <View style={styles.bigStat}>
-              <Text style={styles.bigStatLabel}>↑ Gesendet</Text>
+              <Text style={styles.bigStatLabel}>↑ {t('upload')}</Text>
               <Text style={[styles.bigStatValue, {color: '#A18CD1'}]}>
                 {formatBytes(stats.sessionTxBytes)}
               </Text>
@@ -125,11 +127,11 @@ const StatsScreen: React.FC = () => {
           {/* Sparklines */}
           <View style={styles.charts}>
             <View style={styles.chartRow}>
-              <Text style={styles.chartLabel}>↓ Download</Text>
+              <Text style={styles.chartLabel}>↓ {t('download')}</Text>
               <Sparkline data={rxHistory} color={accent} height={36} />
             </View>
             <View style={[styles.chartRow, {marginTop: 10}]}>
-              <Text style={styles.chartLabel}>↑ Upload</Text>
+              <Text style={styles.chartLabel}>↑ {t('upload')}</Text>
               <Sparkline data={txHistory} color="#A18CD1" height={36} />
             </View>
           </View>
@@ -138,7 +140,7 @@ const StatsScreen: React.FC = () => {
           <View style={styles.uptimeRow}>
             <Clock size={14} color="#444" />
             <Text style={styles.uptimeText}>
-              Laufzeit: {formatDuration(stats.sessionDurationSec)}
+              {t('uptime')}: {formatDuration(stats.sessionDurationSec)}
             </Text>
           </View>
         </View>
@@ -146,29 +148,29 @@ const StatsScreen: React.FC = () => {
 
       {/* Network breakdown */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>NETZWERK (SEIT BOOT)</Text>
+        <Text style={styles.sectionLabel}>{t('network_since_boot')}</Text>
         <View style={styles.cardGrid}>
           <StatCard
             icon={<Wifi size={18} color={accent} strokeWidth={2} />}
-            label="WLAN Empf."
+            label={t('wifi_rx')}
             value={formatBytes(wifiRx)}
             accentColor={accent}
           />
           <StatCard
             icon={<Wifi size={18} color="#A18CD1" strokeWidth={2} />}
-            label="WLAN Send."
+            label={t('wifi_tx')}
             value={formatBytes(wifiTx)}
             accentColor="#A18CD1"
           />
           <StatCard
             icon={<Signal size={18} color="#FA709A" strokeWidth={2} />}
-            label="Mobil Empf."
+            label={t('mobile_rx')}
             value={formatBytes(stats.mobileRxBytes)}
             accentColor="#FA709A"
           />
           <StatCard
             icon={<Signal size={18} color="#43E97B" strokeWidth={2} />}
-            label="Mobil Send."
+            label={t('mobile_tx')}
             value={formatBytes(stats.mobileTxBytes)}
             accentColor="#43E97B"
           />
@@ -177,14 +179,14 @@ const StatsScreen: React.FC = () => {
 
       {/* Total since boot */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>GESAMT (SEIT BOOT)</Text>
+        <Text style={styles.sectionLabel}>{t('total_since_boot')}</Text>
         <View style={styles.totalRow}>
           <View style={styles.totalItem}>
             <ArrowDown size={16} color={accent} strokeWidth={2.5} />
             <Text style={[styles.totalValue, {color: accent}]}>
               {formatBytes(stats.totalRxBytes)}
             </Text>
-            <Text style={styles.totalLabel}>Empfangen</Text>
+            <Text style={styles.totalLabel}>{t('download')}</Text>
           </View>
           <View style={styles.totalDivider} />
           <View style={styles.totalItem}>
@@ -192,7 +194,7 @@ const StatsScreen: React.FC = () => {
             <Text style={[styles.totalValue, {color: '#A18CD1'}]}>
               {formatBytes(stats.totalTxBytes)}
             </Text>
-            <Text style={styles.totalLabel}>Gesendet</Text>
+            <Text style={styles.totalLabel}>{t('upload')}</Text>
           </View>
           <View style={styles.totalDivider} />
           <View style={styles.totalItem}>
@@ -200,14 +202,14 @@ const StatsScreen: React.FC = () => {
             <Text style={styles.totalValueMuted}>
               {formatBytes(stats.totalRxBytes + stats.totalTxBytes)}
             </Text>
-            <Text style={styles.totalLabel}>Gesamt</Text>
+            <Text style={styles.totalLabel}>{t('total')}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.footerNote}>
         <Text style={styles.footerText}>
-          Daten stammen aus Android TrafficStats · Zählung seit Gerätestart
+          {t('data_from')}
         </Text>
       </View>
     </ScrollView>

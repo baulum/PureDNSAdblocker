@@ -9,6 +9,7 @@ import {
 import {Shield, Users, Lock, Globe, Copy} from 'lucide-react-native';
 import {DNS_MODES, DnsModeConfig} from '../constants/dnsModes';
 import {useVpnStore} from '../store/useVpnStore';
+import {useTranslation} from 'react-i18next';
 
 const ModeIcon: React.FC<{icon: string; color: string}> = ({icon, color}) => {
   const props = {size: 20, color, strokeWidth: 2};
@@ -30,6 +31,7 @@ const ServerCard: React.FC<{
   isActive: boolean;
   onActivate: () => void;
 }> = ({config, isActive, onActivate}) => {
+  const {t} = useTranslation();
   const {label, subtitle, description, dns, accentColor, icon} = config;
 
   return (
@@ -50,15 +52,15 @@ const ServerCard: React.FC<{
           </View>
           <View style={styles.cardTitles}>
             <Text style={[styles.cardLabel, {color: accentColor}]}>
-              {label}
+              {t(label)}
             </Text>
-            <Text style={styles.cardSubtitle}>{subtitle}</Text>
+            <Text style={styles.cardSubtitle}>{t(subtitle)}</Text>
           </View>
         </View>
         {isActive ? (
           <View style={[styles.activeBadge, {borderColor: accentColor}]}>
             <Text style={[styles.activeBadgeText, {color: accentColor}]}>
-              AKTIV
+              {t('active_badge')}
             </Text>
           </View>
         ) : (
@@ -66,18 +68,18 @@ const ServerCard: React.FC<{
             style={styles.selectButton}
             onPress={onActivate}
             activeOpacity={0.7}>
-            <Text style={styles.selectButtonText}>Wählen</Text>
+            <Text style={styles.selectButtonText}>{t('select')}</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Description */}
-      <Text style={styles.description}>{description}</Text>
+      <Text style={styles.description}>{t(description)}</Text>
 
       {/* DNS Servers */}
       <View style={styles.dnsSection}>
         <View style={styles.dnsSectionHeader}>
-          <Text style={styles.dnsSectionLabel}>IPv4 DNS-Server</Text>
+          <Text style={styles.dnsSectionLabel}>{t('ipv4_dns_servers')}</Text>
         </View>
         {dns.map((ip, i) => (
           <View key={i} style={styles.dnsRow}>
@@ -95,6 +97,7 @@ const ServerCard: React.FC<{
 };
 
 const ServersScreen: React.FC = () => {
+  const {t} = useTranslation();
   const {currentMode, setMode} = useVpnStore();
 
   return (
@@ -102,9 +105,9 @@ const ServersScreen: React.FC = () => {
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>DNS-Server</Text>
+      <Text style={styles.title}>{t('dns_servers')}</Text>
       <Text style={styles.subtitle}>
-        Übersicht aller verfügbaren Modi und ihrer Server
+        {t('dns_servers_subtitle')}
       </Text>
 
       {DNS_MODES.map(config => (
@@ -118,8 +121,7 @@ const ServersScreen: React.FC = () => {
 
       <View style={styles.footer}>
         <Text style={styles.footerNote}>
-          Alle Server werden von Quad9 / AdGuard / eigenen Anbietern betrieben.
-          DNS-over-HTTPS wird via VPN-Schnittstelle genutzt.
+          {t('dns_footer_note')}
         </Text>
       </View>
     </ScrollView>
