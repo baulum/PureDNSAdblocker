@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,15 +14,19 @@ import Animated, {
   withTiming,
   withSpring,
 } from 'react-native-reanimated';
-import {Home, Server} from 'lucide-react-native';
+import {Home, Server, BarChart2} from 'lucide-react-native';
 import {useVpnStore} from '../store/useVpnStore';
+import {useTrafficStore} from '../store/useTrafficStore';
 import {getModeConfig} from '../constants/dnsModes';
 import PowerButton from '../components/PowerButton';
 import ModePicker from '../components/ModePicker';
+import MiniStatsStrip from '../components/MiniStatsStrip';
 import ServersScreen from './ServersScreen';
+import StatsScreen from './StatsScreen';
 
-type Tab = 'home' | 'servers';
+type Tab = 'home' | 'servers' | 'stats';
 
+// ─── Home Tab ─────────────────────────────────────────────────────────────────
 const HomeTab: React.FC = () => {
   const {isActive, isLoading, currentMode, error, toggleVpn, setMode} =
     useVpnStore();
@@ -70,7 +74,7 @@ const HomeTab: React.FC = () => {
           </Text>
           <Text style={styles.modeText}>
             Modus:{' '}
-            <Text style={[styles.modeName, {color: accentColor + 'AA'}]}>
+            <Text style={[styles.modeName, {color: accentColor + 'BB'}]}>
               {modeConfig.label}
             </Text>
           </Text>
@@ -88,17 +92,40 @@ const HomeTab: React.FC = () => {
         )}
       </View>
 
+      {/* Mini traffic stats (only when active) */}
+      {isActive && <MiniStatsStrip accentColor={accentColor} />}
+
       {/* Mode picker */}
       <ModePicker currentMode={currentMode} onSelect={setMode} />
     </ScrollView>
   );
 };
 
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 const MainScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const {isActive} = useVpnStore();
   const {accentColor} = getModeConfig(useVpnStore(s => s.currentMode));
+  const {startPolling, stopPolling, reset} = useTrafficStore();
   const insets = useSafeAreaInsets();
+
+  // Start/stop traffic polling when VPN toggles
+  useEffect(() => {
+    if (isActive) {
+      reset();
+      startPolling();
+    } else {
+      stopPolling();
+    }
+    return () => stopPolling();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
+
+  const TABS: {key: Tab; label: string; Icon: any}[] = [
+    {key: 'home', label: 'Start', Icon: Home},
+    {key: 'stats', label: 'Stats', Icon: BarChart2},
+    {key: 'servers', label: 'Server', Icon: Server},
+  ];
 
   return (
     <View style={styles.container}>
@@ -117,112 +144,54 @@ const MainScreen: React.FC = () => {
 
       {/* Screen content */}
       <View style={styles.screenArea}>
-        {activeTab === 'home' ? <HomeTab /> : <ServersScreen />}
+        {activeTab === 'home' && <HomeTab />}
+        {activeTab === 'stats' && <StatsScreen />}
+        {activeTab === 'servers' && <ServersScreen />}
       </View>
 
-      {/* Tab bar — respects gesture nav bar height */}
+      {/* Tab bar — respects gesture nav bar */}
       <View style={[styles.tabBar, {paddingBottom: insets.bottom + 6}]}>
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('home')}
-          activeOpacity={0.7}>
-          <Home
-            size={22}
-            color={activeTab === 'home' ? '#E0E0E0' : '#3C3C3E'}
-            strokeWidth={activeTab === 'home' ? 2.5 : 1.8}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              {color: activeTab === 'home' ? '#E0E0E0' : '#3C3C3E'},
-            ]}>
-            Start
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('servers')}
-          activeOpacity={0.7}>
-          <Server
-            size={22}
-            color={activeTab === 'servers' ? '#E0E0E0' : '#3C3C3E'}
-            strokeWidth={activeTab === 'servers' ? 2.5 : 1.8}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              {color: activeTab === 'servers' ? '#E0E0E0' : '#3C3C3E'},
-            ]}>
-            Server
-          </Text>
-        </TouchableOpacity>
+        {TABS.map(({key, label, Icon}) => {
+          const active = activeTab === key;
+          const color = active ? '#E0E0E0' : '#3C3C3E';
+          return (
+            <TouchableOpacity
+              key={key}
+              style={styles.tabItem}
+              onPress={() => setActiveTab(key)}
+              activeOpacity={0.7}>
+              <Icon size={22} color={color} strokeWidth={active ? 2.5 : 1.8} />
+              <Text style={[styles.tabLabel, {color}]}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
+  container: {flex: 1, backgroundColor: '#000'},
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    // paddingTop set dynamically via insets
     paddingBottom: 8,
   },
-  logo: {
-    color: '#E0E0E0',
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  screenArea: {
-    flex: 1,
-  },
+  logo: {color: '#E0E0E0', fontSize: 22, fontWeight: '800', letterSpacing: -0.5},
+  statusDot: {width: 8, height: 8, borderRadius: 4},
+  screenArea: {flex: 1},
+
   // Home tab
-  homeScroll: {
-    flex: 1,
-  },
-  homeContent: {
-    paddingBottom: 20,
-  },
-  buttonArea: {
-    alignItems: 'center',
-    paddingTop: 24,
-    gap: 20,
-  },
-  statusBlock: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusText: {
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  modeText: {
-    color: '#3C3C3E',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  modeName: {
-    fontWeight: '700',
-  },
-  errorText: {
-    color: '#FF4444',
-    fontSize: 12,
-    marginTop: 4,
-  },
+  homeScroll: {flex: 1},
+  homeContent: {paddingBottom: 24, gap: 0},
+  buttonArea: {alignItems: 'center', paddingTop: 24, gap: 20, paddingBottom: 4},
+  statusBlock: {alignItems: 'center', gap: 6},
+  statusText: {fontSize: 20, fontWeight: '700', letterSpacing: -0.3},
+  modeText: {color: '#3C3C3E', fontSize: 13, fontWeight: '500'},
+  modeName: {fontWeight: '700'},
+  errorText: {color: '#FF4444', fontSize: 12, marginTop: 4},
   dnsPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -234,42 +203,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1C1C1E',
   },
-  dnsPillLabel: {
-    color: '#444',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginRight: 2,
-  },
-  dnsPillIp: {
-    color: '#666',
-    fontSize: 12,
-    fontFamily: 'monospace',
-  },
-  dnsPillSep: {
-    color: '#2C2C2E',
-    fontSize: 14,
-  },
+  dnsPillLabel: {color: '#444', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginRight: 2},
+  dnsPillIp: {color: '#666', fontSize: 12, fontFamily: 'monospace'},
+  dnsPillSep: {color: '#2C2C2E', fontSize: 14},
+
   // Tab bar
   tabBar: {
     flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: '#111',
-    paddingBottom: 8,
     paddingTop: 10,
     backgroundColor: '#000',
   },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
+  tabItem: {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4},
+  tabLabel: {fontSize: 10, fontWeight: '600', letterSpacing: 0.3},
 });
 
 export default MainScreen;
