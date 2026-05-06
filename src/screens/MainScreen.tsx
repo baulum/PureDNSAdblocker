@@ -4,10 +4,10 @@ import {
   Text,
   TouchableOpacity,
   View,
-  SafeAreaView,
   StatusBar,
   ScrollView,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -98,13 +98,14 @@ const MainScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const {isActive} = useVpnStore();
   const {accentColor} = getModeConfig(useVpnStore(s => s.currentMode));
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#000" translucent />
 
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header — respects status bar height */}
+      <View style={[styles.header, {paddingTop: insets.top + 12}]}>
         <Text style={styles.logo}>PureDNS</Text>
         <View
           style={[
@@ -119,8 +120,8 @@ const MainScreen: React.FC = () => {
         {activeTab === 'home' ? <HomeTab /> : <ServersScreen />}
       </View>
 
-      {/* Tab bar */}
-      <View style={styles.tabBar}>
+      {/* Tab bar — respects gesture nav bar height */}
+      <View style={[styles.tabBar, {paddingBottom: insets.bottom + 6}]}>
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => setActiveTab('home')}
@@ -157,7 +158,7 @@ const MainScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingTop: 12,
+    // paddingTop set dynamically via insets
     paddingBottom: 8,
   },
   logo: {
